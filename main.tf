@@ -3,6 +3,15 @@ provider "aws" {
   region = "eu-central-1"
 }
 
+variable "server_port" {
+  description = "HTTP server port"
+  default     = 8080
+}
+
+output "public_ip" {
+  value = "${aws_instance.example.public_ip}"
+}
+
 resource "aws_instance" "example" {
   //zauwzmy, ze ami nalezy do regionu
   ami           = "ami-8504fdea"
@@ -24,17 +33,17 @@ resource "aws_instance" "example" {
   user_data = <<-EOF
               #!/bin/bash
               echo "Hello, World" > index.html
-              nohup busybox httpd -f -p 8080 &
+              nohup busybox httpd -f -p "${var.server_port}" &
               EOF
 }
 
-//konfiguracja protow ssh i 8080 dla www  
+//konfiguracja protow ssh i "${var.server_port}" dla www  
 resource "aws_security_group" "instance" {
   name = "terraform-example-instance"
 
   ingress {
-    from_port   = 8080
-    to_port     = 8080
+    from_port   = "${var.server_port}"
+    to_port     = "${var.server_port}"
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
